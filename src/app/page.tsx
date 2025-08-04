@@ -78,6 +78,9 @@ export default function Home() {
           <p className="text-gray-600 mb-8 text-lg">
             Manage your little one's wardrobe with ease
           </p>
+          <p className="text-sm text-gray-500 mb-4">
+            v1.0 - Built for busy parents 👶
+          </p>
           <div className="text-6xl mb-6">👕</div>
           <button 
             onClick={signIn}
