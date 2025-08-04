@@ -18,6 +18,8 @@ export default function ItemSelector({
   className = '' 
 }: ItemSelectorProps) {
   const [items, setItems] = useState<ClothingItem[]>([])
+  const [filteredItems, setFilteredItems] = useState<ClothingItem[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,10 +32,11 @@ export default function ItemSelector({
       setLoading(true)
       const allItems = await clothingService.getItems()
       // Filter out the current item if excludeId is provided
-      const filteredItems = excludeId 
+      const availableItems = excludeId 
         ? allItems.filter(item => item.id !== excludeId)
         : allItems
-      setItems(filteredItems)
+      setItems(availableItems)
+      setFilteredItems(availableItems)
     } catch (error) {
       console.error('Error loading items:', error)
       setError('Failed to load items')
@@ -41,6 +44,19 @@ export default function ItemSelector({
       setLoading(false)
     }
   }
+
+  // Filter items based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredItems(items)
+    } else {
+      const filtered = items.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+      setFilteredItems(filtered)
+    }
+  }, [searchTerm, items])
 
   const toggleSelection = (itemId: string) => {
     const newSelection = selectedIds.includes(itemId)
@@ -78,8 +94,53 @@ export default function ItemSelector({
 
   return (
     <div className={className}>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {items.map((item) => {
+      {/* Search Input */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search items by name or description..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          />
+          <div className="absolute left-3 top-2.5 text-gray-400">
+            🔍
+          </div>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="text-xs text-gray-600 mt-2">
+            {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} found
+          </p>
+        )}
+      </div>
+
+      {/* No Results */}
+      {filteredItems.length === 0 && searchTerm && (
+        <div className="text-center py-8">
+          <div className="text-2xl mb-2">🔍</div>
+          <p className="text-gray-600 mb-2">No items match "{searchTerm}"</p>
+          <button
+            onClick={() => setSearchTerm('')}
+            className="text-blue-500 hover:text-blue-600 text-sm transition-colors"
+          >
+            Clear search
+          </button>
+        </div>
+      )}
+
+      {/* Items Grid */}
+      {filteredItems.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {filteredItems.map((item) => {
           const isSelected = selectedIds.includes(item.id)
           return (
             <div
@@ -113,9 +174,10 @@ export default function ItemSelector({
                 </h4>
               </div>
             </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
       
       {selectedIds.length > 0 && (
         <div className="mt-4 p-3 bg-blue-50 rounded-lg">
