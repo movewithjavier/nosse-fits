@@ -22,6 +22,20 @@ export interface ClothingItemInput {
   image_path: string
 }
 
+export interface ItemMatch {
+  id: string
+  created_at: string
+  item_id: string
+  matches_with_id: string
+}
+
+export interface MatchingItem {
+  id: string
+  name: string
+  image_url: string
+  description?: string
+}
+
 // Helper functions for clothing items
 export const clothingService = {
   // Get all clothing items (personal use - no user filtering)
@@ -143,5 +157,65 @@ export const clothingService = {
       .remove([imagePath])
 
     if (error) throw error
+  },
+
+  // Get items that match with a specific item
+  async getMatchingItems(itemId: string): Promise<MatchingItem[]> {
+    const { data, error } = await supabase
+      .from('item_matches_view')
+      .select('matches_with_id, matches_with_name, matches_with_image_url, matches_with_description')
+      .eq('item_id', itemId)
+    
+    if (error) throw error
+    
+    return (data || []).map(item => ({
+      id: item.matches_with_id,
+      name: item.matches_with_name,
+      image_url: item.matches_with_image_url,
+      description: item.matches_with_description
+    }))
+  },
+
+  // Add a match between two items (bidirectional)
+  async addMatch(itemId: string, matchesWithId: string): Promise<void> {
+    const { error } = await supabase
+      .from('item_matches')
+      .insert([{ item_id: itemId, matches_with_id: matchesWithId }])
+    
+    if (error) throw error
+  },
+
+  // Remove a match between two items (bidirectional)
+  async removeMatch(itemId: string, matchesWithId: string): Promise<void> {
+    const { error } = await supabase
+      .from('item_matches')
+      .delete()
+      .eq('item_id', itemId)
+      .eq('matches_with_id', matchesWithId)
+    
+    if (error) throw error
+  },
+
+  // Set all matches for an item (replaces existing matches)
+  async setMatches(itemId: string, matchIds: string[]): Promise<void> {
+    // Remove existing matches for this item
+    await supabase
+      .from('item_matches')
+      .delete()
+      .eq('item_id', itemId)
+    
+    // Add new matches
+    if (matchIds.length > 0) {
+      const matches = matchIds.map(matchId => ({
+        item_id: itemId,
+        matches_with_id: matchId
+      }))
+      
+      const { error } = await supabase
+        .from('item_matches')
+        .insert(matches)
+      
+      if (error) throw error
+    }
   }
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { clothingService } from '@/lib/supabase'
+import ItemSelector from '@/components/ItemSelector'
 
 export default function AddItem() {
   const router = useRouter()
@@ -17,6 +18,8 @@ export default function AddItem() {
     image: null as File | null
   })
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [selectedMatchIds, setSelectedMatchIds] = useState<string[]>([])
+  const [showMatches, setShowMatches] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -57,12 +60,19 @@ export default function AddItem() {
       setUploadStatus('saving')
 
       // Save item to database
-      await clothingService.addItem({
+      const newItem = await clothingService.addItem({
         name: formData.name.trim(),
         description: formData.description.trim(),
         image_url: url,
         image_path: path
       })
+
+      setUploadProgress(90)
+      
+      // Set matches if any were selected
+      if (selectedMatchIds.length > 0) {
+        await clothingService.setMatches(newItem.id, selectedMatchIds)
+      }
 
       setUploadProgress(100)
       setUploadStatus('success')
@@ -200,6 +210,39 @@ export default function AddItem() {
             <p className="text-xs text-gray-700 mt-1">
               {formData.description.length}/500 characters
             </p>
+          </div>
+
+          {/* Matching Items Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-900">
+                Goes With (optional)
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowMatches(!showMatches)}
+                className="text-blue-500 hover:text-blue-600 text-sm transition-colors"
+              >
+                {showMatches ? 'Hide' : 'Select items'}
+              </button>
+            </div>
+            
+            {selectedMatchIds.length > 0 && (
+              <div className="mb-3 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  {selectedMatchIds.length} matching item{selectedMatchIds.length !== 1 ? 's' : ''} selected
+                </p>
+              </div>
+            )}
+            
+            {showMatches && (
+              <div className="border border-gray-300 rounded-lg p-4">
+                <ItemSelector
+                  selectedIds={selectedMatchIds}
+                  onSelectionChange={setSelectedMatchIds}
+                />
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
