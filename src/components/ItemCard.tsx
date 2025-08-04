@@ -40,11 +40,11 @@ export default function ItemCard({ item, onDelete }: ItemCardProps) {
           {item.name}
         </h3>
         {item.description && (
-          <p className="text-xs text-gray-600 line-clamp-2">
+          <p className="text-xs text-gray-800 line-clamp-2">
             {item.description}
           </p>
         )}
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-xs text-gray-700 mt-2">
           {new Date(item.created_at).toLocaleDateString()}
         </p>
       </div>

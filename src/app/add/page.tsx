@@ -77,7 +77,7 @@ export default function AddItem() {
           <div className="flex items-center">
             <Link 
               href="/"
-              className="mr-4 text-gray-600 hover:text-gray-800 transition-colors"
+              className="mr-4 text-gray-800 hover:text-gray-900 transition-colors"
             >
               ← Back
             </Link>
@@ -90,7 +90,7 @@ export default function AddItem() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Image Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Photo *
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
@@ -115,7 +115,7 @@ export default function AddItem() {
                     <button
                       type="button"
                       onClick={removeImage}
-                      className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      className="text-sm text-gray-800 hover:text-gray-900 underline"
                     >
                       Choose a different photo
                     </button>
@@ -137,8 +137,8 @@ export default function AddItem() {
                     className="cursor-pointer block"
                   >
                     <div className="text-gray-400 text-6xl mb-4">📷</div>
-                    <p className="text-gray-600 text-lg mb-2">Tap to take photo or upload</p>
-                    <p className="text-gray-500 text-sm">JPG, PNG, or GIF up to 10MB</p>
+                    <p className="text-gray-800 text-lg mb-2">Tap to take photo or upload</p>
+                    <p className="text-gray-700 text-sm">JPG, PNG, or GIF up to 10MB</p>
                   </label>
                 </div>
               )}
@@ -147,7 +147,7 @@ export default function AddItem() {
 
           {/* Name Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Item Name *
             </label>
             <input
@@ -156,17 +156,17 @@ export default function AddItem() {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., Blue striped shirt"
               maxLength={100}
-              className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full p-3 border border-gray-300 rounded-lg text-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-700 mt-1">
               {formData.name.length}/100 characters
             </p>
           </div>
 
           {/* Description Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Description (optional)
             </label>
             <textarea
@@ -175,9 +175,9 @@ export default function AddItem() {
               placeholder="Size, brand, notes..."
               maxLength={500}
               rows={3}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full p-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-700 mt-1">
               {formData.description.length}/500 characters
             </p>
           </div>

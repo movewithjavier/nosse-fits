@@ -40,7 +40,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-gray-800">Loading...</div>
       </div>
     )
   }
@@ -55,7 +55,7 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
               <button 
                 onClick={() => setView('inventory')}
-                className="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                className="text-sm text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-1"
               >
                 📦 View Inventory
               </button>
@@ -67,7 +67,7 @@ export default function Home() {
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">👕</div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">Add New Item</h2>
-            <p className="text-gray-600">
+            <p className="text-gray-800">
               {items.length === 0 ? 'Add your first item' : `${items.length} item${items.length !== 1 ? 's' : ''} in wardrobe`}
             </p>
           </div>
@@ -82,7 +82,7 @@ export default function Home() {
           {items.length > 0 && (
             <button 
               onClick={() => setView('inventory')}
-              className="block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-medium transition-colors text-center"
+              className="block w-full bg-gray-200 hover:bg-gray-300 text-gray-900 py-3 rounded-lg font-medium transition-colors text-center"
             >
               View All Items ({items.length})
             </button>
@@ -101,7 +101,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setView('input')}
-                className="md:hidden text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                className="md:hidden text-sm text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-1"
               >
                 ➕ Add Item
               </button>
@@ -124,7 +124,7 @@ export default function Home() {
               {items.length === 0 ? 'Your Wardrobe' : `${items.length} item${items.length !== 1 ? 's' : ''}`}
             </h2>
             {items.length > 0 && (
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-800 text-sm">
                 Tap on an item to view or delete
               </p>
             )}

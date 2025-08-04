@@ -31,8 +31,8 @@ export default function ItemGrid({ items, onUpdate }: ItemGridProps) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="text-6xl mb-4">👕</div>
-        <p className="text-gray-500 text-lg mb-2">No clothing items yet</p>
-        <p className="text-gray-400 text-sm">Add your first item to get started!</p>
+        <p className="text-gray-800 text-lg mb-2">No clothing items yet</p>
+        <p className="text-gray-700 text-sm">Add your first item to get started!</p>
       </div>
     )
   }
