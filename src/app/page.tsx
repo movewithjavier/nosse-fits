@@ -2,40 +2,27 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { supabase, clothingService, ClothingItem } from '@/lib/supabase'
+import { clothingService, ClothingItem } from '@/lib/supabase'
 import ItemGrid from '@/components/ItemGrid'
-import type { User } from '@supabase/supabase-js'
 
 export default function Home() {
   const [items, setItems] = useState<ClothingItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
+  const [view, setView] = useState<'input' | 'inventory'>('input')
 
   useEffect(() => {
-    // Check if user is logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null)
-      if (session?.user) {
-        loadItems()
-      } else {
-        setLoading(false)
-      }
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user || null)
-        if (session?.user) {
-          loadItems()
-        } else {
-          setItems([])
-          setLoading(false)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
+    // Set default view based on screen size
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768
+      setView(isMobile ? 'input' : 'inventory')
+    }
+    
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    
+    loadItems()
+    
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   const loadItems = async () => {
@@ -49,18 +36,6 @@ export default function Home() {
     }
   }
 
-  const signIn = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`
-      }
-    })
-  }
-
-  const signOut = async () => {
-    await supabase.auth.signOut()
-  }
 
   if (loading) {
     return (
@@ -70,25 +45,49 @@ export default function Home() {
     )
   }
 
-  if (!user) {
+  // Show input form directly on mobile, inventory on tablet+
+  if (view === 'input') {
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50 p-4">
-        <div className="text-center max-w-md">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Nosse Fits</h1>
-          <p className="text-gray-600 mb-8 text-lg">
-            Manage your little one's wardrobe with ease
-          </p>
-          <p className="text-sm text-gray-500 mb-4">
-            v1.0 - Built for busy parents 👶
-          </p>
-          <div className="text-6xl mb-6">👕</div>
-          <button 
-            onClick={signIn}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors w-full"
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-2xl mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
+              <button 
+                onClick={() => setView('inventory')}
+                className="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+              >
+                📦 View Inventory
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-2xl mx-auto px-4 py-6">
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">👕</div>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Add New Item</h2>
+            <p className="text-gray-600">
+              {items.length === 0 ? 'Add your first item' : `${items.length} item${items.length !== 1 ? 's' : ''} in wardrobe`}
+            </p>
+          </div>
+          
+          <Link 
+            href="/add"
+            className="block w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg text-lg font-medium transition-colors text-center mb-4"
           >
-            Sign In to Get Started
-          </button>
-        </div>
+            📷 Take Photo & Add Item
+          </Link>
+          
+          {items.length > 0 && (
+            <button 
+              onClick={() => setView('inventory')}
+              className="block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-medium transition-colors text-center"
+            >
+              View All Items ({items.length})
+            </button>
+          )}
+        </main>
       </div>
     )
   }
@@ -99,12 +98,21 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
-            <button 
-              onClick={signOut} 
-              className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setView('input')}
+                className="md:hidden text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+              >
+                ➕ Add Item
+              </button>
+              <Link 
+                href="/add"
+                className="hidden md:flex bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors items-center gap-2"
+              >
+                <span className="text-lg">+</span>
+                Add Item
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -121,26 +129,10 @@ export default function Home() {
               </p>
             )}
           </div>
-          <Link 
-            href="/add"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-          >
-            <span className="text-lg">+</span>
-            Add Item
-          </Link>
         </div>
 
         <ItemGrid items={items} onUpdate={loadItems} />
       </main>
-
-      {/* Floating Add Button for Mobile */}
-      <Link 
-        href="/add"
-        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors sm:hidden"
-        aria-label="Add new item"
-      >
-        +
-      </Link>
     </div>
   )
 }

@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { supabase, clothingService } from '@/lib/supabase'
-import type { User } from '@supabase/supabase-js'
+import { clothingService } from '@/lib/supabase'
 
 export default function AddItem() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -17,17 +15,6 @@ export default function AddItem() {
     image: null as File | null
   })
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Check if user is logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) {
-        router.push('/')
-      } else {
-        setUser(session.user)
-      }
-    })
-  }, [router])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -51,14 +38,17 @@ export default function AddItem() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.image || !formData.name.trim() || !user) return
+    if (!formData.image || !formData.name.trim()) return
 
     setLoading(true)
     try {
+      // Use a static user ID for personal use
+      const userId = 'personal-user'
+      
       // Upload image
       const { path, url } = await clothingService.uploadImage(
         formData.image, 
-        user.id
+        userId
       )
 
       // Save item to database
@@ -67,7 +57,7 @@ export default function AddItem() {
         description: formData.description.trim(),
         image_url: url,
         image_path: path,
-        user_id: user.id
+        user_id: userId
       })
 
       router.push('/')
@@ -79,13 +69,6 @@ export default function AddItem() {
     }
   }
 
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="text-lg text-gray-600">Loading...</div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

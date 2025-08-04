@@ -26,11 +26,12 @@ export interface ClothingItemInput {
 
 // Helper functions for clothing items
 export const clothingService = {
-  // Get all clothing items for current user
+  // Get all clothing items (personal use - no user filtering)
   async getItems(): Promise<ClothingItem[]> {
     const { data, error } = await supabase
       .from('clothing_items')
       .select('*')
+      .eq('user_id', 'personal-user')
       .order('created_at', { ascending: false })
     
     if (error) throw error
