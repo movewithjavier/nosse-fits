@@ -1,3 +1,7 @@
+-- Migration: 001_initial_setup.sql
+-- Description: Initial database setup with authentication-based RLS
+-- Date: 2025-01-04
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
