@@ -19,6 +19,11 @@ This folder contains database migration files for the Nosse Fits application.
 - **Date**: 2025-01-04
 - **Purpose**: Completely removes all RLS restrictions, fixes user_id constraints, grants full permissions
 
+### 004_fix_user_id_column_type.sql ⚠️ **CRITICAL FIX**
+- **Description**: Fix user_id column type from UUID to TEXT for personal use
+- **Date**: 2025-01-04
+- **Purpose**: Solves "invalid input syntax for type uuid: 'personal-user'" error by converting column type
+
 ## How to Apply Migrations
 
 ### For New Projects
@@ -26,7 +31,7 @@ Run migrations in order starting from `001_initial_setup.sql`.
 
 ### For Existing Projects with Authentication
 If you already have the initial setup and want to convert to personal use:
-1. Run `003_super_permissive_personal_use.sql` in your Supabase SQL Editor (this includes all fixes from 002)
+1. **Run `004_fix_user_id_column_type.sql`** in your Supabase SQL Editor (this is the complete fix that includes everything from 002 and 003)
 
 ### Steps to Apply in Supabase
 1. Go to your Supabase project dashboard
