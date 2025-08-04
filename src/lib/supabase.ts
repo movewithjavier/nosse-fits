@@ -70,14 +70,59 @@ export const clothingService = {
     if (error) throw error
   },
 
+  // Compress image for faster upload
+  async compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height)
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              })
+              resolve(compressedFile)
+            } else {
+              reject(new Error('Failed to compress image'))
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      
+      img.onerror = () => reject(new Error('Failed to load image'))
+      img.src = URL.createObjectURL(file)
+    })
+  },
+
   // Upload image to storage
   async uploadImage(file: File): Promise<{ path: string; url: string }> {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}`
+    // Compress image for faster upload
+    const compressedFile = await this.compressImage(file)
+    
+    const fileName = `${Date.now()}.jpg`
     
     const { data, error } = await supabase.storage
       .from('clothing-images')
-      .upload(fileName, file, {
+      .upload(fileName, compressedFile, {
         cacheControl: '3600',
         upsert: false
       })
