@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { clothingService, ClothingItem } from '@/lib/supabase'
 import ItemGrid from '@/components/ItemGrid'
+import { testDeletionCascade } from '@/utils/testDeletion'
 
 export default function Home() {
   const [items, setItems] = useState<ClothingItem[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'input' | 'inventory'>('input')
+  const [testing, setTesting] = useState(false)
 
   useEffect(() => {
     // Set default view based on screen size
@@ -33,6 +35,20 @@ export default function Home() {
       console.error('Error loading items:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const runDeletionTest = async () => {
+    setTesting(true)
+    try {
+      console.log('Starting deletion cascade test...')
+      const result = await testDeletionCascade()
+      alert(result.success ? result.message : `Test failed: ${result.error}`)
+    } catch (error) {
+      console.error('Test error:', error)
+      alert('Test failed - check console for details')
+    } finally {
+      setTesting(false)
     }
   }
 
@@ -99,6 +115,13 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
             <div className="flex items-center gap-4">
+              <button 
+                onClick={runDeletionTest}
+                disabled={testing}
+                className="text-xs bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-3 py-1 rounded transition-colors"
+              >
+                {testing ? 'Testing...' : '🧪 Test Cascade'}
+              </button>
               <button 
                 onClick={() => setView('input')}
                 className="md:hidden text-sm text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-1"
