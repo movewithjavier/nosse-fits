@@ -47,17 +47,11 @@ export default function AddItem() {
     setUploadStatus('uploading')
     
     try {
-      // Use a static user ID for personal use
-      const userId = 'personal-user'
-      
       // Simulate upload progress
       setUploadProgress(20)
       
       // Upload image
-      const { path, url } = await clothingService.uploadImage(
-        formData.image, 
-        userId
-      )
+      const { path, url } = await clothingService.uploadImage(formData.image)
       
       setUploadProgress(70)
       setUploadStatus('saving')
@@ -67,8 +61,7 @@ export default function AddItem() {
         name: formData.name.trim(),
         description: formData.description.trim(),
         image_url: url,
-        image_path: path,
-        user_id: userId
+        image_path: path
       })
 
       setUploadProgress(100)

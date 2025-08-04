@@ -24,6 +24,11 @@ This folder contains database migration files for the Nosse Fits application.
 - **Date**: 2025-01-04
 - **Purpose**: Solves "invalid input syntax for type uuid: 'personal-user'" error by converting column type
 
+### 005_delete_user_id_column.sql 🔥 **NUCLEAR OPTION**
+- **Description**: Just delete the fucking user_id column - we don't need it for personal use
+- **Date**: 2025-01-04
+- **Purpose**: Eliminates all UUID casting issues by removing the column entirely
+
 ## How to Apply Migrations
 
 ### For New Projects
@@ -31,7 +36,7 @@ Run migrations in order starting from `001_initial_setup.sql`.
 
 ### For Existing Projects with Authentication
 If you already have the initial setup and want to convert to personal use:
-1. **Run `004_fix_user_id_column_type.sql`** in your Supabase SQL Editor (this is the complete fix that includes everything from 002 and 003)
+1. **Run `005_delete_user_id_column.sql`** in your Supabase SQL Editor (nuclear option - just deletes the problematic column)
 
 ### Steps to Apply in Supabase
 1. Go to your Supabase project dashboard

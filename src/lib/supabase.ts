@@ -13,7 +13,6 @@ export interface ClothingItem {
   description?: string
   image_url: string
   image_path: string
-  user_id: string
 }
 
 export interface ClothingItemInput {
@@ -21,7 +20,6 @@ export interface ClothingItemInput {
   description?: string
   image_url: string
   image_path: string
-  user_id: string
 }
 
 // Helper functions for clothing items
@@ -31,7 +29,6 @@ export const clothingService = {
     const { data, error } = await supabase
       .from('clothing_items')
       .select('*')
-      .eq('user_id', 'personal-user')
       .order('created_at', { ascending: false })
     
     if (error) throw error
@@ -74,9 +71,9 @@ export const clothingService = {
   },
 
   // Upload image to storage
-  async uploadImage(file: File, userId: string): Promise<{ path: string; url: string }> {
+  async uploadImage(file: File): Promise<{ path: string; url: string }> {
     const fileExt = file.name.split('.').pop()
-    const fileName = `${userId}/${Date.now()}.${fileExt}`
+    const fileName = `${Date.now()}.${fileExt}`
     
     const { data, error } = await supabase.storage
       .from('clothing-images')
