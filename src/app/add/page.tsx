@@ -9,6 +9,8 @@ import { clothingService } from '@/lib/supabase'
 export default function AddItem() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'saving' | 'success'>('idle')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -41,15 +43,24 @@ export default function AddItem() {
     if (!formData.image || !formData.name.trim()) return
 
     setLoading(true)
+    setUploadProgress(0)
+    setUploadStatus('uploading')
+    
     try {
       // Use a static user ID for personal use
       const userId = 'personal-user'
+      
+      // Simulate upload progress
+      setUploadProgress(20)
       
       // Upload image
       const { path, url } = await clothingService.uploadImage(
         formData.image, 
         userId
       )
+      
+      setUploadProgress(70)
+      setUploadStatus('saving')
 
       // Save item to database
       await clothingService.addItem({
@@ -60,6 +71,12 @@ export default function AddItem() {
         user_id: userId
       })
 
+      setUploadProgress(100)
+      setUploadStatus('success')
+      
+      // Brief delay to show success state
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       router.push('/')
     } catch (error) {
       console.error('Error adding item:', error)
@@ -74,6 +91,8 @@ export default function AddItem() {
       }
     } finally {
       setLoading(false)
+      setUploadProgress(0)
+      setUploadStatus('idle')
     }
   }
 
@@ -194,18 +213,53 @@ export default function AddItem() {
           <div className="flex gap-3 pt-4">
             <Link
               href="/"
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg text-lg font-medium text-center transition-colors"
+              className={`flex-1 py-3 rounded-lg text-lg font-medium text-center transition-colors ${
+                loading 
+                  ? 'bg-gray-100 text-gray-400 pointer-events-none' 
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+              }`}
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={loading || !formData.image || !formData.name.trim()}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg text-lg font-medium transition-colors"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg text-lg font-medium transition-colors relative overflow-hidden"
             >
-              {loading ? 'Saving...' : 'Save Item'}
+              {loading && (
+                <div 
+                  className="absolute inset-0 bg-blue-600 transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              )}
+              <span className="relative z-10">
+                {uploadStatus === 'uploading' && '📤 Uploading...'}
+                {uploadStatus === 'saving' && '💾 Saving...'}
+                {uploadStatus === 'success' && '✅ Saved!'}
+                {uploadStatus === 'idle' && 'Save Item'}
+              </span>
             </button>
           </div>
+          
+          {/* Progress Bar */}
+          {loading && (
+            <div className="mt-4">
+              <div className="flex justify-between text-sm text-gray-700 mb-2">
+                <span>
+                  {uploadStatus === 'uploading' && 'Uploading photo...'}
+                  {uploadStatus === 'saving' && 'Saving to wardrobe...'}
+                  {uploadStatus === 'success' && 'Complete!'}
+                </span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
         </form>
       </main>
     </div>

@@ -14,6 +14,11 @@ This folder contains database migration files for the Nosse Fits application.
 - **Date**: 2025-01-04
 - **Purpose**: Removes authentication requirements and RLS policies for personal use
 
+### 003_super_permissive_personal_use.sql
+- **Description**: Make everything super permissive for personal use - no restrictions
+- **Date**: 2025-01-04
+- **Purpose**: Completely removes all RLS restrictions, fixes user_id constraints, grants full permissions
+
 ## How to Apply Migrations
 
 ### For New Projects
@@ -21,7 +26,7 @@ Run migrations in order starting from `001_initial_setup.sql`.
 
 ### For Existing Projects with Authentication
 If you already have the initial setup and want to convert to personal use:
-1. Run `002_convert_to_personal_use.sql` in your Supabase SQL Editor
+1. Run `003_super_permissive_personal_use.sql` in your Supabase SQL Editor (this includes all fixes from 002)
 
 ### Steps to Apply in Supabase
 1. Go to your Supabase project dashboard
