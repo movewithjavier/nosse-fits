@@ -63,7 +63,15 @@ export default function AddItem() {
       router.push('/')
     } catch (error) {
       console.error('Error adding item:', error)
-      alert('Error adding item. Please try again.')
+      // More detailed error logging
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+        alert(`Error adding item: ${error.message}`)
+      } else {
+        console.error('Unknown error:', error)
+        alert('Error adding item. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
