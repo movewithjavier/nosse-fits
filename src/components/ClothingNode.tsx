@@ -15,73 +15,66 @@ const ClothingNode = memo(({ data }: NodeProps<ClothingNodeData>) => {
 
   return (
     <div className="group">
-      {/* Connection handles */}
+      {/* Connection handles - minimal and hidden */}
       <Handle
         type="target"
         position={Position.Top}
         style={{ 
-          background: '#6366f1',
-          width: 8,
-          height: 8,
-          border: '2px solid white'
+          background: 'transparent',
+          border: 'none',
+          width: 6,
+          height: 6,
         }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         style={{ 
-          background: '#6366f1',
-          width: 8,
-          height: 8,
-          border: '2px solid white'
+          background: 'transparent',
+          border: 'none',
+          width: 6,
+          height: 6,
         }}
       />
       <Handle
         type="target"
         position={Position.Left}
         style={{ 
-          background: '#6366f1',
-          width: 8,
-          height: 8,
-          border: '2px solid white'
+          background: 'transparent',
+          border: 'none',
+          width: 6,
+          height: 6,
         }}
       />
       <Handle
         type="source"
         position={Position.Right}
         style={{ 
-          background: '#6366f1',
-          width: 8,
-          height: 8,
-          border: '2px solid white'
+          background: 'transparent',
+          border: 'none',
+          width: 6,
+          height: 6,
         }}
       />
 
-      {/* Node content */}
+      {/* Node content - Circular like Obsidian */}
       <div 
         onClick={onClick}
-        className="relative w-24 h-24 bg-white rounded-lg shadow-lg border-2 border-gray-200 cursor-pointer transition-all hover:shadow-xl hover:border-blue-400 hover:scale-105"
+        className="relative w-16 h-16 bg-white rounded-full shadow-md border-2 border-gray-300 cursor-pointer transition-all hover:shadow-lg hover:border-purple-400 hover:scale-110 overflow-hidden"
       >
-        {/* Item image */}
-        <div className="w-full h-16 relative overflow-hidden rounded-t-md">
+        {/* Item image - fills the circle */}
+        <div className="w-full h-full relative">
           <Image
             src={item.image_url}
             alt={item.name}
             fill
-            className="object-cover"
-            sizes="96px"
+            className="object-cover rounded-full"
+            sizes="64px"
           />
-        </div>
-        
-        {/* Item name */}
-        <div className="p-1">
-          <p className="text-xs font-medium text-gray-900 line-clamp-1 text-center">
-            {item.name}
-          </p>
         </div>
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-all duration-200 pointer-events-none" />
+        <div className="absolute inset-0 bg-purple-500 bg-opacity-0 group-hover:bg-opacity-15 rounded-full transition-all duration-200 pointer-events-none" />
       </div>
 
       {/* Node label (appears below on hover) */}

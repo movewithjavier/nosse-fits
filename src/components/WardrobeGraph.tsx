@@ -48,19 +48,24 @@ export default function WardrobeGraph({ items }: WardrobeGraphProps) {
         })
       )
 
-      // Create nodes from items
+      // Create nodes from items with more organic spacing
       const graphNodes: Node[] = items.map((item, index) => {
-        // Simple grid layout for now - we can make this smarter later
-        const cols = Math.ceil(Math.sqrt(items.length))
-        const row = Math.floor(index / cols)
-        const col = index % cols
+        // More natural circular/organic layout
+        const centerX = 400
+        const centerY = 300
+        const radius = Math.max(150, items.length * 15)
+        const angle = (index / items.length) * 2 * Math.PI
+        
+        // Add some randomness for more organic feel
+        const randomX = (Math.random() - 0.5) * 100
+        const randomY = (Math.random() - 0.5) * 100
         
         return {
           id: item.id,
           type: 'clothing',
           position: {
-            x: col * 200,
-            y: row * 200
+            x: centerX + Math.cos(angle) * radius + randomX,
+            y: centerY + Math.sin(angle) * radius + randomY
           },
           data: {
             item,
@@ -85,10 +90,11 @@ export default function WardrobeGraph({ items }: WardrobeGraphProps) {
               id: pairId,
               source: itemId,
               target: match.id,
-              type: 'smoothstep',
+              type: 'straight',
               style: {
-                stroke: '#6366f1',
-                strokeWidth: 2,
+                stroke: '#9333ea',
+                strokeWidth: 1.5,
+                strokeOpacity: 0.6,
               },
               animated: false
             })
@@ -142,9 +148,9 @@ export default function WardrobeGraph({ items }: WardrobeGraphProps) {
       >
         <Background 
           variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1}
-          color="#e5e7eb"
+          gap={40}
+          size={0.5}
+          color="#f3f4f6"
         />
         <Controls 
           position="bottom-right"
