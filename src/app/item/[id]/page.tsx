@@ -238,7 +238,7 @@ export default function ItemDetail() {
                       </h1>
                       <button
                         onClick={() => setEditingName(true)}
-                        className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        className="text-gray-400 hover:text-gray-600 p-1"
                         title="Edit name"
                       >
                         ✏️
@@ -290,7 +290,7 @@ export default function ItemDetail() {
                             {item.description}
                           </p>
                           <button
-                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity p-1 mt-1"
+                            className="text-gray-400 hover:text-gray-600 p-1 mt-1"
                             title="Edit description"
                           >
                             ✏️
