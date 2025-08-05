@@ -8,6 +8,8 @@ import { testDeletionCascade } from '@/utils/testDeletion'
 
 export default function Home() {
   const [items, setItems] = useState<ClothingItem[]>([])
+  const [filteredItems, setFilteredItems] = useState<ClothingItem[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'input' | 'inventory'>('input')
   const [testing, setTesting] = useState(false)
@@ -31,12 +33,26 @@ export default function Home() {
     try {
       const data = await clothingService.getItems()
       setItems(data)
+      setFilteredItems(data)
     } catch (error) {
       console.error('Error loading items:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  // Filter items based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredItems(items)
+    } else {
+      const filtered = items.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+      setFilteredItems(filtered)
+    }
+  }, [searchTerm, items])
 
   const runDeletionTest = async () => {
     setTesting(true)
@@ -148,13 +164,53 @@ export default function Home() {
             </h2>
             {items.length > 0 && (
               <p className="text-gray-800 text-sm">
-                Tap on an item to view or delete
+                {searchTerm ? `${filteredItems.length} of ${items.length} items` : 'Tap on an item to view or delete'}
               </p>
             )}
           </div>
         </div>
 
-        <ItemGrid items={items} onUpdate={loadItems} />
+        {/* Search Input */}
+        {items.length > 0 && (
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search your wardrobe..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+              <div className="absolute left-3 top-2.5 text-gray-400">
+                🔍
+              </div>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* No Results Message */}
+        {searchTerm && filteredItems.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4">🔍</div>
+            <p className="text-gray-600 mb-2">No items match "{searchTerm}"</p>
+            <button
+              onClick={() => setSearchTerm('')}
+              className="text-blue-500 hover:text-blue-600 transition-colors"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
+
+        <ItemGrid items={filteredItems} onUpdate={loadItems} />
       </main>
     </div>
   )
