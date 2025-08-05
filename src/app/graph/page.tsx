@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { clothingService, ClothingItem } from '@/lib/supabase'
-import WardrobeGraph from '@/components/WardrobeGraph'
+import D3GraphView from '@/components/D3GraphView'
 
 export default function GraphPage() {
   const [items, setItems] = useState<ClothingItem[]>([])
@@ -113,7 +113,7 @@ export default function GraphPage() {
       </header>
 
       <main className="h-[calc(100vh-140px)]">
-        <WardrobeGraph items={items} />
+        <D3GraphView items={items} />
       </main>
     </div>
   )
