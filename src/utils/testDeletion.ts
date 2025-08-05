@@ -3,7 +3,7 @@
 
 import { clothingService } from '@/lib/supabase'
 
-export async function testDeletionCascade() {
+export async function testDeletionCascade(): Promise<{ success: boolean; message?: string; error?: string }> {
   console.log('🧪 Testing deletion cascade behavior...')
   
   try {

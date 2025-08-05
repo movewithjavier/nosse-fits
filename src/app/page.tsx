@@ -59,7 +59,11 @@ export default function Home() {
     try {
       console.log('Starting deletion cascade test...')
       const result = await testDeletionCascade()
-      alert(result.success ? result.message : `Test failed: ${result.error}`)
+      if (result) {
+        alert(result.success ? result.message : `Test failed: ${result.error}`)
+      } else {
+        alert('Test failed - no result returned')
+      }
     } catch (error) {
       console.error('Test error:', error)
       alert('Test failed - check console for details')
