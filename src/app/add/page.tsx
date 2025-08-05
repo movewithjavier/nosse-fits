@@ -36,9 +36,11 @@ export default function AddItem() {
   const removeImage = () => {
     setImagePreview(null)
     setFormData({ ...formData, image: null })
-    // Reset file input
-    const fileInput = document.getElementById('image-upload') as HTMLInputElement
-    if (fileInput) fileInput.value = ''
+    // Reset both file inputs
+    const cameraInput = document.getElementById('camera-upload') as HTMLInputElement
+    const galleryInput = document.getElementById('gallery-upload') as HTMLInputElement
+    if (cameraInput) cameraInput.value = ''
+    if (galleryInput) galleryInput.value = ''
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,23 +155,45 @@ export default function AddItem() {
                 </div>
               ) : (
                 <div className="text-center">
+                  {/* Camera Input */}
                   <input
                     type="file"
                     accept="image/*"
                     capture="environment"
                     onChange={handleImageChange}
                     className="hidden"
-                    id="image-upload"
+                    id="camera-upload"
                     required
                   />
-                  <label 
-                    htmlFor="image-upload"
-                    className="cursor-pointer block"
-                  >
-                    <div className="text-gray-400 text-6xl mb-4">📷</div>
-                    <p className="text-gray-800 text-lg mb-2">Tap to take photo or upload</p>
-                    <p className="text-gray-700 text-sm">JPG, PNG, or GIF up to 10MB</p>
-                  </label>
+                  {/* Gallery Input */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="gallery-upload"
+                    required
+                  />
+                  
+                  <div className="text-gray-400 text-6xl mb-4">📷</div>
+                  <p className="text-gray-800 text-lg mb-4">Add a photo of your clothing item</p>
+                  
+                  <div className="flex gap-3 justify-center">
+                    <label 
+                      htmlFor="camera-upload"
+                      className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                      📷 Take Photo
+                    </label>
+                    <label 
+                      htmlFor="gallery-upload"
+                      className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                      🖼️ Choose from Gallery
+                    </label>
+                  </div>
+                  
+                  <p className="text-gray-700 text-sm mt-3">JPG, PNG, or GIF up to 10MB</p>
                 </div>
               )}
             </div>

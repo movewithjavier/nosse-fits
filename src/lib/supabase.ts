@@ -87,61 +87,105 @@ export const clothingService = {
   // Compress image for faster upload
   async compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
     return new Promise((resolve, reject) => {
+      // Check if browser supports canvas and required APIs
+      if (!HTMLCanvasElement.prototype.toBlob || !window.FileReader) {
+        reject(new Error('Browser does not support required APIs for compression'))
+        return
+      }
+
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
+      
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'))
+        return
+      }
+
       const img = new Image()
       
       img.onload = () => {
-        // Calculate new dimensions
-        let { width, height } = img
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width
-          width = maxWidth
+        try {
+          // Calculate new dimensions
+          let { width, height } = img
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width
+            width = maxWidth
+          }
+          
+          canvas.width = width
+          canvas.height = height
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height)
+          
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // Create a more compatible filename
+                const timestamp = Date.now()
+                const extension = file.name.split('.').pop() || 'jpg'
+                const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+                
+                const compressedFile = new File([blob], `${timestamp}_${cleanName}`, {
+                  type: 'image/jpeg',
+                  lastModified: timestamp
+                })
+                resolve(compressedFile)
+              } else {
+                reject(new Error('Canvas toBlob returned null'))
+              }
+            },
+            'image/jpeg',
+            quality
+          )
+        } catch (error) {
+          reject(new Error(`Canvas operations failed: ${error}`))
         }
-        
-        canvas.width = width
-        canvas.height = height
-        
-        // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height)
-        
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now()
-              })
-              resolve(compressedFile)
-            } else {
-              reject(new Error('Failed to compress image'))
-            }
-          },
-          'image/jpeg',
-          quality
-        )
       }
       
-      img.onerror = () => reject(new Error('Failed to load image'))
-      img.src = URL.createObjectURL(file)
+      img.onerror = (error) => {
+        reject(new Error(`Failed to load image: ${error}`))
+      }
+      
+      // Add timeout to prevent hanging
+      setTimeout(() => {
+        reject(new Error('Image compression timeout'))
+      }, 30000) // 30 second timeout
+      
+      try {
+        img.src = URL.createObjectURL(file)
+      } catch (error) {
+        reject(new Error(`Failed to create object URL: ${error}`))
+      }
     })
   },
 
   // Upload image to storage
   async uploadImage(file: File): Promise<{ path: string; url: string }> {
-    // Compress image for faster upload
-    const compressedFile = await this.compressImage(file)
+    let fileToUpload: File
     
-    const fileName = `${Date.now()}.jpg`
+    try {
+      // Try to compress image for faster upload
+      fileToUpload = await this.compressImage(file)
+    } catch (compressionError) {
+      console.warn('Image compression failed, uploading original:', compressionError)
+      // Fall back to original file if compression fails
+      fileToUpload = file
+    }
+    
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
     
     const { data, error } = await supabase.storage
       .from('clothing-images')
-      .upload(fileName, compressedFile, {
+      .upload(fileName, fileToUpload, {
         cacheControl: '3600',
         upsert: false
       })
 
-    if (error) throw error
+    if (error) {
+      console.error('Upload error:', error)
+      throw new Error(`Upload failed: ${error.message}`)
+    }
     
     const { data: { publicUrl } } = supabase.storage
       .from('clothing-images')

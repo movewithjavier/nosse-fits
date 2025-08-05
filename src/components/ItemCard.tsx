@@ -29,15 +29,6 @@ export default function ItemCard({ item, onDelete }: ItemCardProps) {
             className="object-cover"
             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
-          {onDelete && (
-            <button
-              onClick={handleDelete}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 transition-colors z-10"
-              aria-label="Delete item"
-            >
-              ×
-            </button>
-          )}
         </div>
         <div className="p-3">
           <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-1">
