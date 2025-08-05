@@ -11,12 +11,15 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'input' | 'inventory'>('input')
+  const [userSelectedView, setUserSelectedView] = useState(false)
 
   useEffect(() => {
-    // Set default view based on screen size
+    // Set default view based on screen size only if user hasn't manually selected
     const handleResize = () => {
-      const isMobile = window.innerWidth < 768
-      setView(isMobile ? 'input' : 'inventory')
+      if (!userSelectedView) {
+        const isMobile = window.innerWidth < 768
+        setView(isMobile ? 'input' : 'inventory')
+      }
     }
     
     handleResize()
@@ -25,7 +28,7 @@ export default function Home() {
     loadItems()
     
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [userSelectedView])
 
   const loadItems = async () => {
     try {
@@ -70,7 +73,10 @@ export default function Home() {
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
               <button 
-                onClick={() => setView('inventory')}
+                onClick={() => {
+                  setView('inventory')
+                  setUserSelectedView(true)
+                }}
                 className="text-sm text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-1"
               >
                 📦 View Inventory
@@ -97,7 +103,10 @@ export default function Home() {
           
           {items.length > 0 && (
             <button 
-              onClick={() => setView('inventory')}
+              onClick={() => {
+                setView('inventory')
+                setUserSelectedView(true)
+              }}
               className="block w-full bg-gray-200 hover:bg-gray-300 text-gray-900 py-3 rounded-lg font-medium transition-colors text-center"
             >
               View All Items ({items.length})
@@ -116,7 +125,10 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
             <div className="flex items-center gap-4">
               <button 
-                onClick={() => setView('input')}
+                onClick={() => {
+                  setView('input')
+                  setUserSelectedView(true)
+                }}
                 className="md:hidden text-sm text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-1"
               >
                 ➕ Add Item
