@@ -15,6 +15,11 @@ export default function ItemDetail() {
   const [matchingLoading, setMatchingLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [editingDescription, setEditingDescription] = useState(false)
+  const [tempName, setTempName] = useState('')
+  const [tempDescription, setTempDescription] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     loadItem()
@@ -28,6 +33,8 @@ export default function ItemDetail() {
       
       if (foundItem) {
         setItem(foundItem)
+        setTempName(foundItem.name)
+        setTempDescription(foundItem.description || '')
         loadMatchingItems(foundItem.id)
       } else {
         setError('Item not found')
@@ -65,6 +72,62 @@ export default function ItemDetail() {
       alert('Error deleting item. Please try again.')
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const handleSaveName = async () => {
+    if (!item || !tempName.trim() || tempName.trim() === item.name) {
+      setEditingName(false)
+      setTempName(item?.name || '')
+      return
+    }
+    
+    try {
+      setSaving(true)
+      const updatedItem = await clothingService.updateItem(item.id, {
+        name: tempName.trim()
+      })
+      setItem(updatedItem)
+      setEditingName(false)
+    } catch (error) {
+      console.error('Error updating name:', error)
+      alert('Error updating name. Please try again.')
+      setTempName(item.name)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveDescription = async () => {
+    if (!item || tempDescription.trim() === (item.description || '')) {
+      setEditingDescription(false)
+      setTempDescription(item?.description || '')
+      return
+    }
+    
+    try {
+      setSaving(true)
+      const updatedItem = await clothingService.updateItem(item.id, {
+        description: tempDescription.trim()
+      })
+      setItem(updatedItem)
+      setEditingDescription(false)
+    } catch (error) {
+      console.error('Error updating description:', error)
+      alert('Error updating description. Please try again.')
+      setTempDescription(item.description || '')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancelEdit = (field: 'name' | 'description') => {
+    if (field === 'name') {
+      setEditingName(false)
+      setTempName(item?.name || '')
+    } else {
+      setEditingDescription(false)
+      setTempDescription(item?.description || '')
     }
   }
 
@@ -136,18 +199,111 @@ export default function ItemDetail() {
               
               {/* Content Section */}
               <div className="p-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                  {item.name}
-                </h1>
+                {/* Editable Name */}
+                <div className="mb-4">
+                  {editingName ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={tempName}
+                        onChange={(e) => setTempName(e.target.value)}
+                        className="text-2xl font-bold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none flex-1"
+                        maxLength={100}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveName()
+                          if (e.key === 'Escape') handleCancelEdit('name')
+                        }}
+                        disabled={saving}
+                      />
+                      <button
+                        onClick={handleSaveName}
+                        disabled={saving || !tempName.trim()}
+                        className="text-green-600 hover:text-green-700 text-sm px-2 py-1 disabled:text-gray-400"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => handleCancelEdit('name')}
+                        disabled={saving}
+                        className="text-red-600 hover:text-red-700 text-sm px-2 py-1 disabled:text-gray-400"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 group">
+                      <h1 className="text-2xl font-bold text-gray-900 flex-1">
+                        {item.name}
+                      </h1>
+                      <button
+                        onClick={() => setEditingName(true)}
+                        className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        title="Edit name"
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                  )}
+                </div>
                 
-                {item.description && (
-                  <div className="mb-6">
-                    <h2 className="text-sm font-medium text-gray-700 mb-2">Description</h2>
-                    <p className="text-gray-800 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                )}
+                {/* Editable Description */}
+                <div className="mb-6">
+                  <h2 className="text-sm font-medium text-gray-700 mb-2">Description</h2>
+                  {editingDescription ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={tempDescription}
+                        onChange={(e) => setTempDescription(e.target.value)}
+                        className="w-full text-gray-800 leading-relaxed bg-transparent border-2 border-blue-500 rounded-md p-2 focus:outline-none resize-none"
+                        maxLength={500}
+                        rows={3}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') handleCancelEdit('description')
+                        }}
+                        disabled={saving}
+                        placeholder="Add a description..."
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleSaveDescription}
+                          disabled={saving}
+                          className="text-green-600 hover:text-green-700 text-sm px-3 py-1 border border-green-600 rounded disabled:text-gray-400 disabled:border-gray-400"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => handleCancelEdit('description')}
+                          disabled={saving}
+                          className="text-gray-600 hover:text-gray-700 text-sm px-3 py-1 border border-gray-300 rounded disabled:text-gray-400"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="group cursor-pointer" onClick={() => setEditingDescription(true)}>
+                      {item.description ? (
+                        <div className="flex items-start gap-2">
+                          <p className="text-gray-800 leading-relaxed flex-1">
+                            {item.description}
+                          </p>
+                          <button
+                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity p-1 mt-1"
+                            title="Edit description"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-gray-500 italic hover:text-gray-700 transition-colors py-2">
+                          Click to add description...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>

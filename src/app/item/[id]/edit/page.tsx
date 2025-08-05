@@ -15,8 +15,6 @@ export default function EditItemMatches() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [itemName, setItemName] = useState('')
-  const [itemDescription, setItemDescription] = useState('')
 
   useEffect(() => {
     loadItem()
@@ -30,8 +28,6 @@ export default function EditItemMatches() {
       
       if (foundItem) {
         setItem(foundItem)
-        setItemName(foundItem.name)
-        setItemDescription(foundItem.description || '')
         // Load existing matches
         const matches = await clothingService.getMatchingItems(foundItem.id)
         setSelectedMatchIds(matches.map(match => match.id))
@@ -51,21 +47,11 @@ export default function EditItemMatches() {
     
     try {
       setSaving(true)
-      
-      // Update item name and description if changed
-      if (itemName.trim() !== item.name || itemDescription.trim() !== (item.description || '')) {
-        await clothingService.updateItem(item.id, {
-          name: itemName.trim(),
-          description: itemDescription.trim()
-        })
-      }
-      
-      // Update matches
       await clothingService.setMatches(item.id, selectedMatchIds)
       router.push(`/item/${item.id}`)
     } catch (error) {
-      console.error('Error saving changes:', error)
-      alert('Error saving changes. Please try again.')
+      console.error('Error saving matches:', error)
+      alert('Error saving matches. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -123,10 +109,10 @@ export default function EditItemMatches() {
               </Link>
               <button
                 onClick={handleSave}
-                disabled={saving || !itemName.trim()}
+                disabled={saving}
                 className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm transition-colors"
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Saving...' : 'Save Matches'}
               </button>
             </div>
           </div>
@@ -146,40 +132,13 @@ export default function EditItemMatches() {
                 sizes="64px"
               />
             </div>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900 mb-3">
-                Edit Item
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                Edit matches for "{item.name}"
               </h1>
-              
-              {/* Name Input */}
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  maxLength={100}
-                  required
-                />
-              </div>
-              
-              {/* Description Input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (optional)
-                </label>
-                <textarea
-                  value={itemDescription}
-                  onChange={(e) => setItemDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  maxLength={500}
-                  rows={2}
-                  placeholder="Size, brand, notes..."
-                />
-              </div>
+              <p className="text-gray-600 text-sm mt-1">
+                Select items that go well with this piece
+              </p>
             </div>
           </div>
         </div>
