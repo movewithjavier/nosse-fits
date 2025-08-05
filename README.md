@@ -1,14 +1,16 @@
-# Nosse Fits
+# Nosse Fits 👕
 
-A mobile-first web application designed to help parents efficiently manage and track their children's clothing inventory.
+A mobile-first wardrobe management app for busy parents to track their children's clothing inventory.
 
-## Features
+## Features ✨
 
-- 📱 Mobile-first responsive design optimized for phones and tablets
-- 📷 Photo-based clothing inventory management
-- 🔐 Secure authentication with Supabase
-- ☁️ Cloud storage for images
-- 🚀 PWA support for app-like experience
+- **📱 Mobile-optimized** - Designed for phone and tablet use with responsive layouts
+- **📷 Photo capture** - Quick item entry with camera integration and automatic compression
+- **🔍 Smart search** - Find items quickly in your wardrobe and when selecting matches
+- **🎯 Item matching** - Track which items go well together with bidirectional relationships
+- **🚀 Fast uploads** - Automatic image compression for faster mobile uploads
+- **💾 Reliable storage** - Secure cloud storage with Supabase
+- **📱 PWA ready** - Install as an app on your device
 
 ## Tech Stack
 
@@ -80,29 +82,54 @@ Run the following SQL commands in your Supabase SQL editor:
 -- See supabase-setup.sql for the complete schema
 \`\`\`
 
-## Usage
+## Usage 📖
 
-1. **Sign In**: Use Google OAuth to authenticate
-2. **Add Items**: Tap the "+" button to photograph and add clothing items
-3. **View Inventory**: Browse your clothing items in the main grid view
-4. **Delete Items**: Tap the "×" button on any item to remove it
+1. **Browse Wardrobe**: View all your clothing items in a responsive grid
+2. **Search Items**: Use the search bar to quickly find specific items by name or description
+3. **Add New Items**: 
+   - Tap the "+" button to add new clothing items
+   - Take a photo or upload from gallery (automatically compressed for speed)
+   - Optionally select which items "go with" this new item
+4. **View Item Details**: Tap any item to see full details and matching items
+5. **Manage Matches**: 
+   - See which items go together in the sidebar (iPad) or below (mobile)
+   - Edit matches to build complete outfit combinations
+   - Relationships are bidirectional (A matches B means B matches A)
+6. **Delete Items**: Tap the "×" button on any item to remove it (removes all matches automatically)
 
-## Project Structure
+## Project Structure 📁
 
 ```
-src/
-├── app/
-│   ├── page.tsx          # Home page with inventory grid
-│   ├── add/
-│   │   └── page.tsx      # Add new item page
-│   ├── layout.tsx        # Root layout
-│   └── globals.css       # Global styles
-├── components/
-│   ├── ItemCard.tsx      # Individual clothing item card
-│   └── ItemGrid.tsx      # Grid layout for items
-└── lib/
-    └── supabase.ts       # Supabase client and helpers
+nosse-fits/
+├── docs/                     # Documentation
+│   ├── deployment.md         # Deployment guide
+│   ├── product-requirements.md # Product specifications
+│   └── technical-guide.md    # Technical implementation details
+├── migrations/               # Database schema migrations
+├── src/
+│   ├── app/
+│   │   ├── page.tsx          # Home page with inventory grid and search
+│   │   ├── add/page.tsx      # Add new item page with matching selection
+│   │   ├── item/[id]/
+│   │   │   ├── page.tsx      # Item detail view with matching sidebar
+│   │   │   └── edit/page.tsx # Edit item matches
+│   │   ├── layout.tsx        # Root layout
+│   │   └── globals.css       # Global styles
+│   ├── components/
+│   │   ├── ItemCard.tsx      # Individual clothing item card (clickable)
+│   │   ├── ItemGrid.tsx      # Grid layout for items
+│   │   └── ItemSelector.tsx  # Multi-select component with search
+│   └── lib/
+│       └── supabase.ts       # Supabase client and database functions
+├── public/                   # Static assets and PWA files
+└── private/                  # Sensitive configs (gitignored)
 ```
+
+## Documentation 📚
+
+- **[Deployment Guide](./docs/deployment.md)** - Complete setup and deployment instructions
+- **[Product Requirements](./docs/product-requirements.md)** - Product specifications and user stories
+- **[Technical Guide](./docs/technical-guide.md)** - Architecture and implementation details
 
 ## License
 
