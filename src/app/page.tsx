@@ -115,6 +115,14 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">Nosse Fits</h1>
             <div className="flex items-center gap-4">
+              {items.length > 0 && (
+                <Link
+                  href="/graph"
+                  className="text-sm text-purple-700 hover:text-purple-900 transition-colors flex items-center gap-1"
+                >
+                  🕸️ Network
+                </Link>
+              )}
               <button 
                 onClick={() => setView('input')}
                 className="md:hidden text-sm text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-1"
