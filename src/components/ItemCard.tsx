@@ -39,9 +39,6 @@ export default function ItemCard({ item, onDelete }: ItemCardProps) {
               {item.description}
             </p>
           )}
-          <p className="text-xs text-gray-700 mt-2">
-            {new Date(item.created_at).toLocaleDateString()}
-          </p>
         </div>
       </div>
     </Link>
