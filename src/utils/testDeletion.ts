@@ -13,7 +13,10 @@ export async function testDeletionCascade(): Promise<{ success: boolean; message
     
     if (allItems.length < 2) {
       console.log('❌ Need at least 2 items to test matching')
-      return
+      return {
+        success: false,
+        error: 'Need at least 2 items to test matching'
+      }
     }
     
     // Take first two items for testing
@@ -40,7 +43,10 @@ export async function testDeletionCascade(): Promise<{ success: boolean; message
       console.log('✅ Bidirectional relationship confirmed')
     } else {
       console.log('❌ Bidirectional relationship failed')
-      return
+      return {
+        success: false,
+        error: 'Bidirectional relationship test failed'
+      }
     }
     
     // Now test deletion - we'll simulate checking what would happen
