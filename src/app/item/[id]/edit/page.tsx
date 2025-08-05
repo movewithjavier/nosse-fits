@@ -136,7 +136,7 @@ export default function EditItemMatches() {
               <h1 className="text-xl font-bold text-gray-900">
                 Edit matches for "{item.name}"
               </h1>
-              <p className="text-gray-600 text-sm mt-1">
+              <p className="text-gray-800 text-sm mt-1">
                 Select items that go well with this piece
               </p>
             </div>
@@ -148,7 +148,7 @@ export default function EditItemMatches() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Choose matching items (optional)
           </h2>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-gray-800 text-sm mb-4">
             Select items that go well with this piece
           </p>
           <ItemSelector
