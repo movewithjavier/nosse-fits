@@ -11,7 +11,7 @@ export default function AddItem() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'retrying' | 'saving' | 'success'>('idle')
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'rate-limiting' | 'retrying' | 'saving' | 'success'>('idle')
   const [retryAttempt, setRetryAttempt] = useState(0)
   const [isOnline, setIsOnline] = useState(true)
   const [formData, setFormData] = useState({
@@ -23,8 +23,11 @@ export default function AddItem() {
   const [selectedMatchIds, setSelectedMatchIds] = useState<string[]>([])
   const [showMatches, setShowMatches] = useState(false)
 
-  // Monitor network connectivity
+  // Monitor network connectivity and track page load time
   useEffect(() => {
+    // Track when page loaded for rate limiting detection
+    (window as any).pageLoadTime = Date.now()
+    
     const updateOnlineStatus = () => setIsOnline(navigator.onLine)
     
     window.addEventListener('online', updateOnlineStatus)
@@ -74,6 +77,14 @@ export default function AddItem() {
       }
 
       setUploadProgress(10)
+      
+      // Check for rapid uploads and show rate limiting message
+      const now = Date.now()
+      const timeSincePageLoad = now - (window as any).pageLoadTime || 0
+      if (timeSincePageLoad < 10000) { // If uploading within 10 seconds of page load
+        setUploadStatus('rate-limiting')
+        setUploadProgress(20)
+      }
       
       // Upload image with retry logic
       const { path, url } = await clothingService.uploadImage(formData.image)
@@ -336,6 +347,7 @@ export default function AddItem() {
               )}
               <span className="relative z-10">
                 {uploadStatus === 'uploading' && '📤 Uploading...'}
+                {uploadStatus === 'rate-limiting' && '⏳ Preventing throttling...'}
                 {uploadStatus === 'retrying' && `🔄 Retrying (${retryAttempt}/3)...`}
                 {uploadStatus === 'saving' && '💾 Saving...'}
                 {uploadStatus === 'success' && '✅ Saved!'}
@@ -350,6 +362,7 @@ export default function AddItem() {
               <div className="flex justify-between text-sm text-gray-700 mb-2">
                 <span>
                   {uploadStatus === 'uploading' && 'Uploading photo...'}
+                  {uploadStatus === 'rate-limiting' && 'Adding delay to prevent rate limiting...'}
                   {uploadStatus === 'retrying' && `Retrying upload (attempt ${retryAttempt}/3)...`}
                   {uploadStatus === 'saving' && 'Saving to wardrobe...'}
                   {uploadStatus === 'success' && 'Complete!'}

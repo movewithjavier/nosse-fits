@@ -10,6 +10,17 @@ export const createFreshSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseKey)
 }
 
+// Track upload timing to prevent rate limiting
+let lastUploadTime = 0
+const MIN_UPLOAD_INTERVAL = 2000 // Minimum 2 seconds between uploads
+let uploadCount = 0
+
+// Reset upload tracking periodically
+setInterval(() => {
+  uploadCount = 0
+  console.log('📊 Reset upload count for new session')
+}, 60000) // Reset every minute
+
 export interface ClothingItem {
   id: string
   created_at: string
@@ -241,7 +252,31 @@ export const clothingService = {
   // Upload image to storage with retry logic and enhanced error handling
   async uploadImage(file: File, maxRetries = 3): Promise<{ path: string; url: string }> {
     const uploadId = Math.random().toString(36).substring(2, 8)
+    uploadCount++
+    
     console.log(`🚀 [${uploadId}] Starting upload process for: ${file.name}`)
+    console.log(`📊 [${uploadId}] Upload metrics:`, {
+      uploadCount,
+      timeSinceLastUpload: Date.now() - lastUploadTime,
+      minInterval: MIN_UPLOAD_INTERVAL
+    })
+    
+    // Implement rate limiting to prevent throttling
+    const timeSinceLastUpload = Date.now() - lastUploadTime
+    if (timeSinceLastUpload < MIN_UPLOAD_INTERVAL && lastUploadTime > 0) {
+      const waitTime = MIN_UPLOAD_INTERVAL - timeSinceLastUpload
+      console.log(`⏳ [${uploadId}] Rate limiting: waiting ${waitTime}ms before upload`)
+      await new Promise(resolve => setTimeout(resolve, waitTime))
+    }
+    
+    // Progressive backoff for multiple uploads in short succession
+    if (uploadCount > 2) {
+      const progressiveDelay = Math.min((uploadCount - 2) * 1000, 5000) // Max 5 second delay
+      console.log(`🐌 [${uploadId}] Progressive backoff: ${progressiveDelay}ms for upload #${uploadCount}`)
+      await new Promise(resolve => setTimeout(resolve, progressiveDelay))
+    }
+    
+    lastUploadTime = Date.now()
     
     // Detect browser for compatibility
     const userAgent = navigator.userAgent.toLowerCase()
@@ -353,9 +388,22 @@ export const clothingService = {
             throw new Error(finalError)
           }
           
-          // Wait before retrying (exponential backoff)
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000) // Max 10 seconds
-          console.log(`⏳ [${uploadId}] Retrying in ${delay}ms...`)
+          // Enhanced backoff with rate limiting consideration
+          let delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000) // Base exponential backoff
+          
+          // For network/rate limiting errors, use longer delays
+          if (error.message.toLowerCase().includes('network') || 
+              error.message.toLowerCase().includes('rate') ||
+              error.message.toLowerCase().includes('throttl')) {
+            delay = Math.min(delay * 2, 15000) // Double delay for network issues, max 15s
+          }
+          
+          // Additional delay for multiple rapid uploads
+          if (uploadCount > 2) {
+            delay += (uploadCount - 2) * 1000 // Add 1s per extra upload
+          }
+          
+          console.log(`⏳ [${uploadId}] Enhanced retry backoff: ${delay}ms (attempt ${attempt}, uploadCount: ${uploadCount})`)
           await new Promise(resolve => setTimeout(resolve, delay))
           continue
         }
@@ -383,9 +431,12 @@ export const clothingService = {
           throw uploadError
         }
         
-        // Wait before retrying
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
-        console.log(`⏳ [${uploadId}] Retrying in ${delay}ms...`)
+        // Enhanced wait before retrying with upload count consideration  
+        let delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
+        if (uploadCount > 2) {
+          delay += (uploadCount - 2) * 2000 // Add 2s per extra upload for catch block
+        }
+        console.log(`⏳ [${uploadId}] Exception retry backoff: ${delay}ms (uploadCount: ${uploadCount})`)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
@@ -404,11 +455,22 @@ export const clothingService = {
       'connection',
       'fetch',
       'NetworkError',
-      'TypeError'
+      'TypeError',
+      'rate limit',
+      'too many requests',
+      '429',
+      'throttled'
     ]
     
     const errorMessage = error?.message?.toLowerCase() || ''
-    return retryableMessages.some(msg => errorMessage.includes(msg))
+    const isRetryable = retryableMessages.some(msg => errorMessage.includes(msg))
+    
+    // For rate limiting errors, add longer delays
+    if (errorMessage.includes('rate') || errorMessage.includes('throttl') || errorMessage.includes('429')) {
+      console.log(`🚦 Rate limiting detected, will use longer backoff delays`)
+    }
+    
+    return isRetryable
   },
 
   // Get user-friendly error message
