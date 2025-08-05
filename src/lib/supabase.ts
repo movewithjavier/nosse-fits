@@ -160,13 +160,20 @@ export const clothingService = {
     })
   },
 
-  // Upload image to storage
-  async uploadImage(file: File): Promise<{ path: string; url: string }> {
+  // Upload image to storage with retry logic
+  async uploadImage(file: File, maxRetries = 3): Promise<{ path: string; url: string }> {
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB. Maximum size is 10MB.`)
+    }
+
     let fileToUpload: File
     
     try {
       // Try to compress image for faster upload
       fileToUpload = await this.compressImage(file)
+      console.log(`Image compressed from ${Math.round(file.size / 1024)}KB to ${Math.round(fileToUpload.size / 1024)}KB`)
     } catch (compressionError) {
       console.warn('Image compression failed, uploading original:', compressionError)
       // Fall back to original file if compression fails
@@ -175,23 +182,93 @@ export const clothingService = {
     
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
     
-    const { data, error } = await supabase.storage
-      .from('clothing-images')
-      .upload(fileName, fileToUpload, {
-        cacheControl: '3600',
-        upsert: false
-      })
+    // Retry logic with exponential backoff
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Upload attempt ${attempt}/${maxRetries} for file: ${fileName}`)
+        
+        const { data, error } = await supabase.storage
+          .from('clothing-images')
+          .upload(fileName, fileToUpload, {
+            cacheControl: '3600',
+            upsert: false
+          })
 
-    if (error) {
-      console.error('Upload error:', error)
-      throw new Error(`Upload failed: ${error.message}`)
+        if (error) {
+          console.error(`Upload attempt ${attempt} failed:`, error)
+          
+          // Check if it's a retryable error
+          const isRetryable = this.isRetryableError(error)
+          
+          if (!isRetryable || attempt === maxRetries) {
+            throw new Error(`Upload failed: ${this.getReadableErrorMessage(error)}`)
+          }
+          
+          // Wait before retrying (exponential backoff)
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000) // Max 10 seconds
+          console.log(`Retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+        
+        // Success! Get the public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('clothing-images')
+          .getPublicUrl(fileName)
+
+        console.log(`Upload successful on attempt ${attempt}`)
+        return { path: fileName, url: publicUrl }
+        
+      } catch (uploadError) {
+        console.error(`Upload attempt ${attempt} error:`, uploadError)
+        
+        if (attempt === maxRetries) {
+          throw uploadError
+        }
+        
+        // Wait before retrying
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
+        console.log(`Retrying in ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
     }
     
-    const { data: { publicUrl } } = supabase.storage
-      .from('clothing-images')
-      .getPublicUrl(fileName)
+    throw new Error('Upload failed after all retry attempts')
+  },
 
-    return { path: fileName, url: publicUrl }
+  // Check if an error is retryable
+  isRetryableError(error: any): boolean {
+    const retryableMessages = [
+      'failed to fetch',
+      'network error',
+      'timeout',
+      'connection',
+      'fetch',
+      'NetworkError',
+      'TypeError'
+    ]
+    
+    const errorMessage = error?.message?.toLowerCase() || ''
+    return retryableMessages.some(msg => errorMessage.includes(msg))
+  },
+
+  // Get user-friendly error message
+  getReadableErrorMessage(error: any): string {
+    const errorMessage = error?.message?.toLowerCase() || ''
+    
+    if (errorMessage.includes('failed to fetch') || errorMessage.includes('network')) {
+      return 'Network connection issue. Please check your internet connection and try again.'
+    }
+    
+    if (errorMessage.includes('timeout')) {
+      return 'Upload timed out. Please try again with a smaller image or better connection.'
+    }
+    
+    if (errorMessage.includes('storage')) {
+      return 'Storage service temporarily unavailable. Please try again in a moment.'
+    }
+    
+    return error?.message || 'Unknown upload error'
   },
 
   // Delete image from storage

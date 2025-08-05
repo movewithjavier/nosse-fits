@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -11,7 +11,9 @@ export default function AddItem() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'saving' | 'success'>('idle')
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'retrying' | 'saving' | 'success'>('idle')
+  const [retryAttempt, setRetryAttempt] = useState(0)
+  const [isOnline, setIsOnline] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -20,6 +22,19 @@ export default function AddItem() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [selectedMatchIds, setSelectedMatchIds] = useState<string[]>([])
   const [showMatches, setShowMatches] = useState(false)
+
+  // Monitor network connectivity
+  useEffect(() => {
+    const updateOnlineStatus = () => setIsOnline(navigator.onLine)
+    
+    window.addEventListener('online', updateOnlineStatus)
+    window.addEventListener('offline', updateOnlineStatus)
+    
+    return () => {
+      window.removeEventListener('online', updateOnlineStatus)
+      window.removeEventListener('offline', updateOnlineStatus)
+    }
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -50,12 +65,17 @@ export default function AddItem() {
     setLoading(true)
     setUploadProgress(0)
     setUploadStatus('uploading')
+    setRetryAttempt(0)
     
     try {
-      // Simulate upload progress
-      setUploadProgress(20)
+      // Check network connectivity
+      if (!navigator.onLine) {
+        throw new Error('No internet connection. Please check your network and try again.')
+      }
+
+      setUploadProgress(10)
       
-      // Upload image
+      // Upload image with retry logic
       const { path, url } = await clothingService.uploadImage(formData.image)
       
       setUploadProgress(70)
@@ -85,19 +105,27 @@ export default function AddItem() {
       router.push('/')
     } catch (error) {
       console.error('Error adding item:', error)
-      // More detailed error logging
+      
+      let errorMessage = 'Error adding item. Please try again.'
+      
       if (error instanceof Error) {
-        console.error('Error message:', error.message)
-        console.error('Error stack:', error.stack)
-        alert(`Error adding item: ${error.message}`)
-      } else {
-        console.error('Unknown error:', error)
-        alert('Error adding item. Please try again.')
+        errorMessage = error.message
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          fileName: formData.image?.name,
+          fileSize: formData.image?.size,
+          networkStatus: navigator.onLine ? 'online' : 'offline'
+        })
       }
+      
+      // Show user-friendly error message
+      alert(errorMessage)
     } finally {
       setLoading(false)
       setUploadProgress(0)
       setUploadStatus('idle')
+      setRetryAttempt(0)
     }
   }
 
@@ -106,14 +134,28 @@ export default function AddItem() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <Link 
-              href="/"
-              className="mr-4 text-gray-800 hover:text-gray-900 transition-colors"
-            >
-              ← Back
-            </Link>
-            <h1 className="text-xl font-semibold text-gray-900">Add New Item</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Link 
+                href="/"
+                className="mr-4 text-gray-800 hover:text-gray-900 transition-colors"
+              >
+                ← Back
+              </Link>
+              <h1 className="text-xl font-semibold text-gray-900">Add New Item</h1>
+            </div>
+            
+            {/* Network Status Indicator */}
+            <div className={`flex items-center gap-2 text-xs px-2 py-1 rounded-full ${
+              isOnline 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                isOnline ? 'bg-green-500' : 'bg-red-500'
+              }`} />
+              {isOnline ? 'Online' : 'Offline'}
+            </div>
           </div>
         </div>
       </header>
@@ -294,6 +336,7 @@ export default function AddItem() {
               )}
               <span className="relative z-10">
                 {uploadStatus === 'uploading' && '📤 Uploading...'}
+                {uploadStatus === 'retrying' && `🔄 Retrying (${retryAttempt}/3)...`}
                 {uploadStatus === 'saving' && '💾 Saving...'}
                 {uploadStatus === 'success' && '✅ Saved!'}
                 {uploadStatus === 'idle' && 'Save Item'}
@@ -307,6 +350,7 @@ export default function AddItem() {
               <div className="flex justify-between text-sm text-gray-700 mb-2">
                 <span>
                   {uploadStatus === 'uploading' && 'Uploading photo...'}
+                  {uploadStatus === 'retrying' && `Retrying upload (attempt ${retryAttempt}/3)...`}
                   {uploadStatus === 'saving' && 'Saving to wardrobe...'}
                   {uploadStatus === 'success' && 'Complete!'}
                 </span>
